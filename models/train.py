@@ -69,16 +69,13 @@ class Trainer():
                         img_path = os.path.join(path, filename)
                         data.append(img_path)
                         targets.append(int(data_path != path))
-
             train_data, test_data, train_targets, test_targets = train_test_split(data, targets, test_size=0.2, random_state=42)
             train_dataset = CustomDataset(train_data, train_targets, self.transform)
             test_dataset = CustomDataset(test_data, test_targets, self.transform)
             train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
             test_dataloader = DataLoader(test_dataset, batch_size = batch_size, shuffle = False)
-
             model = NN().to(self.device)
             optimizer = torch.optim.Adam(model.parameters(), lr  = learning_rate)
-
             for epoch in range(num_epochs):
                 train_loss = 0
                 train_correct = 0

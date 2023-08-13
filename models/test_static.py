@@ -12,12 +12,20 @@ from train import NN
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 data_path = Path("data/by_character")
 weights_path = Path("models/weights")
+characters = [chr(65 + i) for i in range(26)] + [str(i) for i in range(10)]
+character_types = ["cap", "low", "num"]
 
 input_character = input("What character do you want to test? ")
 if input_character.isalpha():
     input_character_type = input("Cap or low? ")
 else:
     input_character_type = "num"
+
+grid_size = (6, 9)
+spacing = 0.69
+fig_width = grid_size[1] * (1 + spacing)
+fig_height = grid_size[0] * (1 + spacing)
+fig, ax = plt.subplots(grid_size[0], grid_size[1], figsize = (fig_width, fig_height))
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels = 1),
@@ -56,13 +64,6 @@ if __name__ == "__main__":
     model = NN().to(device)
     model.load_state_dict(torch.load(weights))
     model.eval()
-    grid_size = (6, 9)
-    spacing = 0.69
-    fig_width = grid_size[1] * (1 + spacing)
-    fig_height = grid_size[0] * (1 + spacing)
-    fig, ax = plt.subplots(grid_size[0], grid_size[1], figsize = (fig_width, fig_height))
-    characters = [chr(65 + i) for i in range(26)] + [str(i) for i in range(10)]
-    character_types = ["cap", "low", "num"]
     random_image_paths = []
     for test in range(grid_size[0] * grid_size[1]):
         test_character = random.choice(characters)
