@@ -4,7 +4,7 @@ import torch.nn as nn
 from pathlib import Path
 from PIL import Image
 from torchvision.transforms import transforms
-from characters_nn import NeuralNet
+from train import Trainer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 weights_path = Path("neural_networks/weights")
@@ -21,7 +21,7 @@ transform = transforms.Compose([
 # Load all the trained models
 models = []
 for data_path in data_paths:
-    model = NeuralNet().to(device)
+    model = Trainer().to(device)
     weights = weights_path / f"weights_{data_path.stem}.pth"
     model.load_state_dict(torch.load(weights))
     model.eval()
