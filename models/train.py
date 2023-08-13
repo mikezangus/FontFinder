@@ -9,9 +9,12 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-weights_path = Path("neural_networks/weights")
+weights_path = Path("models/weights")
 data_path = Path("data/by_character")
 data_paths = [data_path / f"{chr(65 + i)}_cap" for i in range(26)] + [data_path / f"{chr(97 + i)}_low" for i in range(26)] + [data_path / f"{i}_num" for i in range(10)]
+num_epochs = 1
+batch_size = 32
+learning_rate = 0.001
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels = 1),
@@ -37,9 +40,9 @@ class CustomDataset(Dataset):
             img = self.transform(img)
         return img, target
 
-class NeuralNet(nn.Module):
+class NN(nn.Module):
     def __init__(self):
-        super(NeuralNet, self).__init__()
+        super(NN, self).__init__()
         self.layers = nn.Sequential(
             nn.Conv2d(in_channels = 1, out_channels = 8, kernel_size = 3, stride = 1, padding = 1),
             nn.ReLU(),
@@ -65,18 +68,17 @@ class Trainer():
                     if filename.endswith(".png"):
                         img_path = os.path.join(path, filename)
                         data.append(img_path)
-                        targets.append(int(i != j))
+                        targets.append(int(data_path != path))
 
             train_data, test_data, train_targets, test_targets = train_test_split(data, targets, test_size=0.2, random_state=42)
             train_dataset = CustomDataset(train_data, train_targets, self.transform)
             test_dataset = CustomDataset(test_data, test_targets, self.transform)
-            train_dataloader = DataLoader(train_dataset, batch_size = 32, shuffle = True)
-            test_dataloader = DataLoader(test_dataset, batch_size = 32, shuffle = False)
+            train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+            test_dataloader = DataLoader(test_dataset, batch_size = batch_size, shuffle = False)
 
-            model = NeuralNet().to(self.device)
-            optimizer = torch.optim.Adam(model.parameters(), lr  = 0.001)
+            model = NN().to(self.device)
+            optimizer = torch.optim.Adam(model.parameters(), lr  = learning_rate)
 
-            num_epochs = 1
             for epoch in range(num_epochs):
                 train_loss = 0
                 train_correct = 0
@@ -92,11 +94,10 @@ class Trainer():
                     loss.backward()
                     optimizer.step()
                     train_loss += loss.item()
-                    _, predicted = torch.max(outputs.data, 1)
-                    train_correct += (predicted == labels).sum().item()
+                    train_correct += ((outputs.argmax(dim = 1)) == labels).sum().item()
                     total_train += labels.size(0)
                 end_time = time.time()
-                epoch_time = end_time - start_time
+                epoch_time = (end_time - start_time) / 60
                 train_accuracy = 100 * train_correct / total_train
                 train_loss /= len(train_dataloader)
                 test_loss = 0
@@ -109,12 +110,11 @@ class Trainer():
                         outputs = model(images)
                         loss = criterion(outputs, labels)
                         test_loss += loss.item()
-                        _, predicted = torch.max(outputs.data, 1)
-                        test_correct += (predicted == labels).sum().item()
+                        test_correct += (outputs.argmax(dim = 1) == labels).sum().item()
                         total_test += labels.size(0)
                 test_accuracy = 100 * test_correct / total_test
                 test_loss /= len(test_dataloader)
-                print(f"Character: {data_path.stem} | Epoch: {epoch + 1}/{num_epochs} | Train Loss: {train_loss:.4f} | Train Accuracy: {train_accuracy:.2f}% | Test Loss: {test_loss:.4f} | Test Accuracy: {test_accuracy:.2f} | Epoch Time: {epoch_time / 60 :.2f} mins")
+                print(f"Character: {data_path.stem} | Epoch: {epoch + 1}/{num_epochs} | Train Loss: {train_loss:.4f} | Train Accuracy: {train_accuracy:.2f}% | Test Loss: {test_loss:.4f} | Test Accuracy: {test_accuracy:.2f} | Epoch Time: {epoch_time:.2f} mins")
             weights = weights_path / f"weights_{data_path.stem}.pth"
             torch.save(model.state_dict(), weights)
             print(f"Saved weights to {weights}")

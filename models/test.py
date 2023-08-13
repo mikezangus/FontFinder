@@ -7,11 +7,11 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from characters_nn import NeuralNet
+from train import NN
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 data_path = Path("data/by_character")
-weights_path = Path("neural_networks/weights")
+weights_path = Path("models/weights")
 
 input_character = input("What character do you want to test? ")
 if input_character.isalpha():
@@ -53,7 +53,7 @@ def test(image_path, model):
 
 if __name__ == "__main__":
     weights = weights_path / f"weights_{input_character}_{input_character_type}.pth"
-    model = NeuralNet().to(device)
+    model = NN().to(device)
     model.load_state_dict(torch.load(weights))
     model.eval()
     grid_size = (6, 9)
