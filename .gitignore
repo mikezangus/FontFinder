@@ -4,3 +4,4 @@ data_preprocessing/
 misc/
 __pycache__/
 .DS_Store
+.gitignore
