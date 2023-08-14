@@ -12,8 +12,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 weights_path = Path("models/weights")
 data_path = Path("data/by_character")
 data_paths = [data_path / f"{chr(65 + i)}_cap" for i in range(26)] + [data_path / f"{chr(97 + i)}_low" for i in range(26)] + [data_path / f"{i}_num" for i in range(10)]
-num_epochs = 1
-batch_size = 32
+num_epochs = 10
+batch_size = 100
 learning_rate = 0.001
 
 transform = transforms.Compose([
